@@ -173,6 +173,10 @@ public class Manager: NSObject, CBCentralManagerDelegate {
             }
             
         }
+        
+        dispatch_async(dispatch_get_main_queue()) { () -> Void in
+            self.delegate?.managerDidUpdateState(self)
+        }
     }
     
     @objc public func centralManager(central: CBCentralManager, didDiscoverPeripheral peripheral: CBPeripheral, advertisementData: [String : AnyObject], RSSI: NSNumber) {
@@ -225,7 +229,7 @@ public class Manager: NSObject, CBCentralManagerDelegate {
             }
         }
     }
-    
+
 }
 
 
@@ -252,6 +256,10 @@ public protocol ManagerDelegate: class {
      */
     func manager(manager: Manager, disconnectedFromDevice device: Device, retry: Bool)
     
+    /**
+     Called when the `Manager` did change state.
+     */
+    func managerDidUpdateState(manager: Manager)
 }
 
 
