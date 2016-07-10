@@ -175,7 +175,7 @@ public class Manager: NSObject, CBCentralManagerDelegate {
         }
         
         dispatch_async(dispatch_get_main_queue()) { () -> Void in
-            self.delegate?.managerDidUpdateState(self)
+            self.delegate?.managerDidUpdateState(ManagerState(rawValue: central.state.rawValue)!)
         }
     }
     
@@ -259,9 +259,18 @@ public protocol ManagerDelegate: class {
     /**
      Called when the `Manager` did change state.
      */
-    func managerDidUpdateState(manager: Manager)
+    func managerDidUpdateState(state: ManagerState)
 }
 
+
+public enum ManagerState : Int {
+    case Unknown
+    case Resetting
+    case Unsupported
+    case Unauthorized
+    case PoweredOff
+    case PoweredOn
+}
 
 private struct ManagerConstants {
     static let dispatchQueueLabel = "nl.e-sites.bluetooth-kit"
