@@ -9,6 +9,7 @@
 import Foundation
 import CoreBluetooth
 
+
 internal class ServiceModelManager: NSObject, CBPeripheralDelegate {
     
     private weak var peripheral: CBPeripheral?
@@ -182,13 +183,20 @@ internal class ServiceModelManager: NSObject, CBPeripheralDelegate {
         guard let serviceModel = serviceModel(withUUID: characteristic.service.UUID.UUIDString) else {
             return
         }
-        
+        print(characteristic)
         // Update the value of the changed characteristic.
         serviceModel.didRead(characteristic.value, withUUID: characteristic.UUID.UUIDString)
     }
     
     @objc internal func peripheral(peripheral: CBPeripheral, didWriteValueForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
-        print("didWrite")
+        print("didWrite: \(characteristic), error: \(error)")
+    }
+    
+    func peripheral(peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: NSError?) {
+        if error == nil {
+            // знаю что это страшный костыль, но у меня нет времени сейчас на правильную допилку этого класса :(((((
+            NSNotificationCenter.defaultCenter().postNotificationName("Bluetonium.didReadRSSI", object: nil, userInfo: ["RSSI":RSSI])
+        }
     }
     
 }

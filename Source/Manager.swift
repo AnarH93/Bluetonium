@@ -51,6 +51,15 @@ public class Manager: NSObject, CBCentralManagerDelegate {
         scanning = true
         
         foundDevices.removeAll()
+        
+        for peripheral in centralManager?.retrieveConnectedPeripheralsWithServices(services?.CBUUIDs() ?? []) ?? [] {
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(0.2 * Double(NSEC_PER_SEC))), dispatchQueue) {
+                let device = Device(peripheral: peripheral)
+                device.registerServiceManager()
+                self.connectWithDevice(device)
+            }
+        }
+        
         centralManager?.scanForPeripheralsWithServices(services?.CBUUIDs(), options: nil)
     }
     
@@ -113,7 +122,8 @@ public class Manager: NSObject, CBCentralManagerDelegate {
                     self.delegate?.manager(self, willConnectToDevice: self.connectedDevice!)
                 }
                 
-                centralManager?.connectPeripheral(peripheral, options: [CBConnectPeripheralOptionNotifyOnDisconnectionKey: NSNumber(bool: true)])
+                centralManager?.connectPeripheral(peripheral, options: [CBConnectPeripheralOptionNotifyOnDisconnectionKey: NSNumber(bool: true),
+                    CBCentralManagerScanOptionAllowDuplicatesKey:NSNumber(bool: true)])
             }
         }
     }
