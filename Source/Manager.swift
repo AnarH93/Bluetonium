@@ -16,6 +16,13 @@ open class Manager: NSObject, CBCentralManagerDelegate {
             return centralManager?.state == .poweredOn
         }
     }
+    
+    open var isStorred: Bool {
+        get {
+            return storedConnectedUUID() != nil
+        }
+    }
+    
     fileprivate(set) open var scanning = false
     fileprivate(set) open var connectedDevice: Device?
     fileprivate(set) open var foundDevices: [Device]!
