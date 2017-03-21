@@ -206,6 +206,7 @@ open class Manager: NSObject, CBCentralManagerDelegate {
             
             DispatchQueue.main.async { () -> Void in
                 self.delegate?.manager(self, didFindDevice: device)
+                self.delegate?.manager(self, didFindDevice: device, rssi: RSSI)
             }
         }
     }
@@ -256,7 +257,12 @@ public protocol ManagerDelegate: class {
      Called when the `Manager` did find a peripheral and did add it to the foundDevices array.
      */
     func manager(_ manager: Manager, didFindDevice device: Device)
-    
+
+    /**
+     Called when the `Manager` did find a peripheral and did add it to the foundDevices array.
+     */
+    func manager(_ manager: Manager, didFindDevice device: Device, rssi RSSI: NSNumber)
+
     /**
      Called when the `Manager` is trying to connect to device
      */
