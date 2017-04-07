@@ -66,6 +66,9 @@ open class Manager: NSObject, CBCentralManagerDelegate {
         for peripheral in centralManager?.retrieveConnectedPeripherals(withServices: services?.CBUUIDs() ?? []) ?? [] {
             dispatchQueue.asyncAfter(deadline: DispatchTime.now() + Double(Int64(0.2 * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC)) {
                 let device = Device(peripheral: peripheral)
+                guard let delegate = self.delegate, delegate.manager(self, shouldConnectTo: device) == true else {
+                    return
+                }
                 device.registerServiceManager()
                 self.connect(with: device)
             }
@@ -184,7 +187,7 @@ open class Manager: NSObject, CBCentralManagerDelegate {
     // MARK: CBCentralManagerDelegate
 
     @objc open func centralManager(_ central: CBCentralManager, willRestoreState dict: [String : Any]) {
-        print("willRestoreState: \(dict[CBCentralManagerRestoredStatePeripheralsKey])")
+        print("willRestoreState: \(String(describing: dict[CBCentralManagerRestoredStatePeripheralsKey]))")
     }
 
     @objc open func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -203,14 +206,17 @@ open class Manager: NSObject, CBCentralManagerDelegate {
                     }
                 })
 
-                if let peripheral = central.retrievePeripherals(withIdentifiers: uuids).first {
+                central.retrievePeripherals(withIdentifiers: uuids).forEach({ (peripheral) in
+                    let device = Device(peripheral: peripheral)
+                    guard let delegate = self.delegate, delegate.manager(self, shouldConnectTo: device) == true else {
+                        return
+                    }
+
                     dispatchQueue.asyncAfter(deadline: DispatchTime.now() + Double(Int64(0.2 * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC)) {
-                        let device = Device(peripheral: peripheral)
                         device.registerServiceManager()
                         self.connect(with: device)
                     }
-                }
-
+                })
             }
 
         } else if central.state == .poweredOff {
@@ -302,6 +308,8 @@ public protocol ManagerDelegate: class {
      */
     func manager(_ manager: Manager, didFindDevice device: Device, rssi RSSI: NSNumber)
 
+    func manager(_ manager: Manager, shouldConnectTo device: Device) -> Bool
+
     /**
      Called when the `Manager` is trying to connect to device
      */
@@ -342,7 +350,7 @@ private struct ManagerConstants {
 
 
 internal extension Collection where Iterator.Element == String {
-
+    
     func CBUUIDs() -> [CBUUID] {
         return self.map({ (UUID) -> CBUUID in
             return CBUUID(string: UUID)
