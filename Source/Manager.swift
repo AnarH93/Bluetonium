@@ -290,7 +290,7 @@ open class Manager: NSObject, CBCentralManagerDelegate {
             }
 
             DispatchQueue.main.async { () -> Void in
-                self.delegate?.manager(self, disconnectedFromDevice: device, retry: device != nil)
+                self.delegate?.manager(self, disconnectedFromDevice: device, retry: true)
             }
         }
     }
