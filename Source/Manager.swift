@@ -253,7 +253,7 @@ open class Manager: NSObject, CBCentralManagerDelegate {
 
     @objc open func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
 
-        let device = self.connectedDevices.first(where: { $0.peripheral == peripheral })
+        let device = self.connectedDevices.first(where: { $0.peripheral.identifier == peripheral.identifier })
 
         if let connectedDevice = device {
             DispatchQueue.main.async { () -> Void in
