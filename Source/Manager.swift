@@ -74,7 +74,6 @@ open class Manager: NSObject, CBCentralManagerDelegate {
             }
         }
 
-        print("startScanForDevices")
         centralManager?.scanForPeripherals(withServices: services?.CBUUIDs(), options: nil)
     }
 
@@ -96,11 +95,9 @@ open class Manager: NSObject, CBCentralManagerDelegate {
     open func connect(with device: Device) {
         // Only allow connecting when it's not yet connected to another device.
 
-        if connectedDevices.contains(device) || disconnecting {
-            return
+        if !connectedDevices.contains(device) { //|| disconnecting {
+            connectedDevices.append(device)
         }
-
-        connectedDevices.append(device)
         connect(to: device)
     }
 
@@ -116,12 +113,12 @@ open class Manager: NSObject, CBCentralManagerDelegate {
             return
         }
 
-        if peripheral.state != .connected {
-            connectedDevices.remove(object: device)
-        } else {
-            disconnecting = true
-            centralManager?.cancelPeripheralConnection(peripheral)
-        }
+        //if peripheral.state != .connected {
+        connectedDevices.remove(object: device)
+        //} else {
+        disconnecting = true
+        centralManager?.cancelPeripheralConnection(peripheral)
+        //}
     }
 
     // MARK: Private functions
@@ -137,8 +134,9 @@ open class Manager: NSObject, CBCentralManagerDelegate {
                     // Send callback to delegate.
                     self.delegate?.manager(self, willConnectToDevice: device)
                 }
-                centralManager?.connect(device.peripheral, options: [CBConnectPeripheralOptionNotifyOnDisconnectionKey: NSNumber(value: true as Bool),
-                                                                     CBCentralManagerScanOptionAllowDuplicatesKey:NSNumber(value: true as Bool)])
+
+                centralManager?.connect(device.peripheral, options: nil)//[CBConnectPeripheralOptionNotifyOnDisconnectionKey: NSNumber(value: true as Bool),
+                //CBCentralManagerScanOptionAllowDuplicatesKey:NSNumber(value: true as Bool)])
             }
         }
     }
@@ -253,7 +251,13 @@ open class Manager: NSObject, CBCentralManagerDelegate {
 
     @objc open func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
 
-        let device = self.connectedDevices.first(where: { $0.peripheral.identifier == peripheral.identifier })
+        var device = self.connectedDevices.first(where: { $0.peripheral.identifier == peripheral.identifier })
+
+        //wtf?
+        if device == nil {
+            device = Device(peripheral: peripheral)
+            connectedDevices.append(device!)
+        }
 
         if let connectedDevice = device {
             DispatchQueue.main.async { () -> Void in
@@ -272,22 +276,24 @@ open class Manager: NSObject, CBCentralManagerDelegate {
 
     @objc open func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
 
-        let connectedDevice = self.connectedDevices.first(where: { $0.peripheral == peripheral })
+        let connectedDevice = connectedDevices.first(where: { $0.peripheral == peripheral })
+
+        central.connect(peripheral, options: nil)
 
         if let device = connectedDevice {
             device.serviceModelManager.resetServices()
 
-            if disconnecting {
-                // Disconnect initated by user.
+            //if disconnecting {
+            // Disconnect initated by user.
 
-                //remove object from array
-                connectedDevices.remove(object: device)
-                disconnecting = false
-            } else {
-                // Send reconnect command after peripheral disconnected.
-                // It will connect again when it became available.
-                central.connect(peripheral, options: nil)
-            }
+            //remove object from array
+            connectedDevices.remove(object: device)
+            disconnecting = false
+            //} else {
+            // Send reconnect command after peripheral disconnected.
+            // It will connect again when it became available.
+            //central.connect(peripheral, options: nil)
+            //}
 
             DispatchQueue.main.async { () -> Void in
                 self.delegate?.manager(self, disconnectedFromDevice: device, retry: true)
