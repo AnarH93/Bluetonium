@@ -186,14 +186,14 @@ class ServiceModelManager: NSObject, CBPeripheralDelegate {
     }
 
 
-    func peripheral(peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: NSError?) {
+    func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
         if error == nil {
             // знаю что это страшный костыль, но у меня нет времени сейчас на правильную допилку этого класса :(((((
-            NSNotificationCenter.defaultCenter().postNotificationName("Bluetonium.didReadRSSI", object: nil, userInfo: ["RSSI":RSSI])
+            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "Bluetonium.didReadRSSI"), object: nil, userInfo: ["RSSI":RSSI])
         }
     }
 
     @objc func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
-        print("didWrite: \(characteristic), error: \(error)")
+        print("didWrite: \(characteristic), error: \(String(describing: error))")
     }
 }

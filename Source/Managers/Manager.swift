@@ -17,7 +17,7 @@ open class Manager: NSObject, CBCentralManagerDelegate {
 
     open var isStorred: Bool {
         get {
-            return storedConnectedUUID() != nil
+            return storedConnectedUUID != nil
         }
     }
 
@@ -145,7 +145,7 @@ open class Manager: NSObject, CBCentralManagerDelegate {
     // MARK: CBCentralManagerDelegate
     
     @objc public func centralManager(_ central: CBCentralManager, willRestoreState dict: [String : Any]) {
-        print("willRestoreState: \(dict[CBCentralManagerRestoredStatePeripheralsKey])")
+        print("willRestoreState: \(String(describing: dict[CBCentralManagerRestoredStatePeripheralsKey]))")
     }
     
     @objc public func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -181,8 +181,8 @@ open class Manager: NSObject, CBCentralManagerDelegate {
             break
         }
 
-        dispatch_async(dispatch_get_main_queue()) { () -> Void in
-            self.delegate?.managerDidUpdateState(ManagerState(rawValue: central.state.rawValue)!)
+        DispatchQueue.main.async {
+            self.delegate?.managerDidUpdateState(state: ManagerState(rawValue: central.state.rawValue)!)
         }
     }
     
