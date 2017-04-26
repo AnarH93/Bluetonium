@@ -14,7 +14,13 @@ open class Manager: NSObject, CBCentralManagerDelegate {
     open var bluetoothEnabled: Bool {
         return centralManager?.state == .poweredOn
     }
-    
+
+    open var isStorred: Bool {
+        get {
+            return storedConnectedUUID() != nil
+        }
+    }
+
     private(set) open var scanning = false
     private(set) open var connectedDevice: Device?
     private(set) open var foundDevices: [Device]!
@@ -193,6 +199,7 @@ open class Manager: NSObject, CBCentralManagerDelegate {
         
         DispatchQueue.main.async {
             self.delegate?.manager(self, didFindDevice: device)
+            self.delegate?.manager(self, didFindDevice: device, rssi: RSSI)
         }
     }
     

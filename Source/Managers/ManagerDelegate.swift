@@ -14,7 +14,12 @@ public protocol ManagerDelegate: class {
      Called when the `Manager` did find a peripheral and did add it to the foundDevices array.
      */
     func manager(_ manager: Manager, didFindDevice device: Device)
-    
+
+    /**
+     Called when the `Manager` did find a peripheral and did add it to the foundDevices array.
+     */
+    func manager(_ manager: Manager, didFindDevice device: Device, rssi RSSI: NSNumber)
+
     /**
      Called when the `Manager` is trying to connect to device
      */
