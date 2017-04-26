@@ -25,72 +25,72 @@ class HeartRateServiceModel: ServiceModel {
     weak var delegate: HeartRateServiceModelDelegate?
     
     var heartRate = UInt16()
-    var bodyLocation = NSData()
-    var controlPoint = NSData()
+    var bodyLocation = Data()
+    var controlPoint = Data()
     
-    override func serviceUUID() -> String {
+    override var serviceUUID:String {
         return HeartRateServiceModelConstants.serviceUUID
     }
     
-    override func mapping(map: Map) {
-        heartRate <- (map[HeartRateServiceModelConstants.heartRateUUID], HeartRateDataTransformer())
-        bodyLocation <- map[HeartRateServiceModelConstants.bodyLocationUUID]
-        controlPoint <- map[HeartRateServiceModelConstants.controlPointUUID]
+    override func mapping(_ map: Map) {
+        heartRate       <- (map[HeartRateServiceModelConstants.heartRateUUID], HeartRateDataTransformer())
+        bodyLocation    <- map[HeartRateServiceModelConstants.bodyLocationUUID]
+        controlPoint    <- map[HeartRateServiceModelConstants.controlPointUUID]
     }
     
-    override func registerNotifyForCharacteristic(withUUID UUID: String) -> Bool {
-        return UUID == HeartRateServiceModelConstants.heartRateUUID
+    override func registerNotifyForCharacteristic(withUUID uuid: String) -> Bool {
+        return uuid == HeartRateServiceModelConstants.heartRateUUID
     }
     
-    override func characteristicBecameAvailable(withUUID UUID: String) {
+    override func characteristicBecameAvailable(withUUID uuid: String) {
         // Reset Energy Expended via ControlPoint if needed.
-        if UUID == HeartRateServiceModelConstants.controlPointUUID {
-            var rawArray:[UInt8] = [0x01];
-            controlPoint = NSData(bytes: &rawArray, length: rawArray.count)
-            writeValue(withUUID: UUID)
+        if uuid != HeartRateServiceModelConstants.controlPointUUID {
+            return
         }
+        
+        var rawArray:[UInt8] = [0x01]
+        controlPoint = Data(bytes: &rawArray, count: rawArray.count)
+        writeValue(withUUID: uuid)
     }
     
-    override func characteristicDidUpdateValue(withUUID UUID: String) {
-        if UUID == HeartRateServiceModelConstants.heartRateUUID {
-            dispatch_async(dispatch_get_main_queue()) { () -> Void in
-                self.delegate?.heartRateChanged(self.heartRate)
-            }
+    override func characteristicDidUpdateValue(withUUID uuid: String) {
+        if (uuid != HeartRateServiceModelConstants.heartRateUUID) {
+            return
+        }
+        DispatchQueue.main.async {
+            self.delegate?.heartRateChanged(self.heartRate)
         }
     }
-    
 }
 
 /**
-    HeartRateDataTransformer
-    Transforms NSData to an actual HeartRate.
-*/
+ HeartRateDataTransformer
+ Transforms Data to an actual HeartRate.
+ */
 class HeartRateDataTransformer: DataTransformer {
     
-    func transform(dataToValue data: NSData?) -> MapValue {
+    func transform(dataToValue data: Data?) -> MapValue {
         
         guard let data = data else {
             return UInt16()
         }
         
-        var bpm = UInt16()
-        let buffer = UnsafePointer<UInt8>(data.bytes)
-        if (buffer[0] & 0x01 == 0){
-            bpm = UInt16(buffer[1]);
-        } else {
-            bpm = CFSwapInt16LittleToHost(UInt16(buffer[1]))
+        return data.withUnsafeBytes { (buffer: UnsafePointer<UInt16>) in
+            if (buffer[0] & 0x01 == 0) {
+                return UInt16(buffer[1]) as UInt16
+            } else {
+                return CFSwapInt16LittleToHost(UInt16(buffer[1])) as UInt16
+            }
         }
-        return bpm
     }
     
-    func transform(valueToData value: MapValue?) -> NSData {
+    func transform(valueToData value: MapValue?) -> Data {
         // Unused
-        return NSData()
+        return Data()
     }
-    
 }
 
 
 protocol HeartRateServiceModelDelegate: class {
-    func heartRateChanged(heartRate: UInt16)
+    func heartRateChanged(_ heartRate: UInt16)
 }

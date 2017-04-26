@@ -24,32 +24,34 @@ class BatteryServiceModel: ServiceModel {
     
     var batteryLevel: UInt8 = 0
     
-    override func serviceUUID() -> String {
+    override open var serviceUUID:String {
         return BatteryServiceModelConstants.serviceUUID
     }
     
-    override func mapping(map: Map) {
+    override func mapping(_ map: Map) {
         batteryLevel <- map[BatteryServiceModelConstants.batteryLevelUUID]
     }
     
-    override func registerNotifyForCharacteristic(withUUID UUID: String) -> Bool {
+    override func registerNotifyForCharacteristic(withUUID uuid: String) -> Bool {
         return true
     }
     
-    override func characteristicBecameAvailable(withUUID UUID: String) {
-        readValue(withUUID: UUID)
+    override func characteristicBecameAvailable(withUUID uuid: String) {
+        readValue(withUUID: uuid)
     }
     
-    override func characteristicDidUpdateValue(withUUID UUID: String) {
-        if UUID == BatteryServiceModelConstants.batteryLevelUUID {
-            dispatch_async(dispatch_get_main_queue()) { () -> Void in
-                self.delegate?.batteryLevelChanged(self.batteryLevel)
-            }
+    override func characteristicDidUpdateValue(withUUID uuid: String) {
+        guard uuid == BatteryServiceModelConstants.batteryLevelUUID else {
+            return
+        }
+        
+        DispatchQueue.main.async {
+            self.delegate?.batteryLevelChanged(self.batteryLevel)
         }
     }
 }
 
 
 protocol BatteryServiceModelDelegate: class {
-    func batteryLevelChanged(batteryLevel: UInt8)
+    func batteryLevelChanged(_ batteryLevel: UInt8)
 }

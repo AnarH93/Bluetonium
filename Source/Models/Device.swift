@@ -10,28 +10,21 @@ import Foundation
 import CoreBluetooth
 
 /**
- Equatable support.
- */
-public func ==(lhs: Device, rhs: Device) -> Bool {
-    return lhs.peripheral.identifier == rhs.peripheral.identifier
-}
-
-/**
  A `Device` will represent a CBPeripheral.
  When registering ServiceModels on this device it will automaticly map the characteristics to the correct value.
 */
 public class Device: Equatable {
     
     // An array of all registered `ServiceModel` subclasses
-    public var registedServiceModels: [ServiceModel] {
-        get {
-            return serviceModelManager.registeredServiceModels
-        }
+    open var registedServiceModels: [ServiceModel] {
+        return serviceModelManager.registeredServiceModels
     }
+    
     // The peripheral it represents.
     private(set) public var peripheral: CBPeripheral
+    
     // The ServiceModelManager that will manage all registered `ServiceModels`
-    private(set) internal var serviceModelManager: ServiceModelManager
+    private(set) var serviceModelManager: ServiceModelManager
     
     // MARK: Initializers
     
@@ -42,7 +35,7 @@ public class Device: Equatable {
      */
     public init(peripheral: CBPeripheral) {
         self.peripheral = peripheral
-        self.serviceModelManager = ServiceModelManager(withPeripheral: peripheral)
+        self.serviceModelManager = ServiceModelManager(peripheral: peripheral)
     }
     
     // MARK: Public functions
@@ -53,19 +46,25 @@ public class Device: Equatable {
     
      - parameter serviceModel: The ServiceModel subclass to register.
      */
-    public func registerServiceModel(serviceModel: ServiceModel) {
-        serviceModelManager.registerServiceModel(serviceModel)
+    public func register(serviceModel: ServiceModel) {
+        serviceModelManager.register(serviceModel: serviceModel)
     }
     
-    // MARK: Internal functions
+    // MARK: functions
     
     /**
      Register serviceManager as delegate of the peripheral.
      This should be done just before connecting/
      If done at initalizing it will override the existing peripheral delegate.
     */
-    internal func registerServiceManager() {
+    func registerServiceManager() {
         peripheral.delegate = serviceModelManager
     }
-    
+
+    /**
+     Equatable support.
+     */
+    public static func == (lhs: Device, rhs: Device) -> Bool {
+        return lhs.peripheral.identifier == rhs.peripheral.identifier
+    }
 }

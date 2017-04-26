@@ -8,14 +8,14 @@
 
 import Foundation
 /**
-    Equatable support.
+ Equatable support.
  */
 public func ==(lhs: ServiceModel, rhs: ServiceModel) -> Bool {
-    return lhs.serviceUUID() == rhs.serviceUUID()
+    return lhs.serviceUUID == rhs.serviceUUID
 }
 
 
-public class ServiceModel: Equatable {
+open class ServiceModel: Equatable {
     
     // MARK: Public properties
     
@@ -23,40 +23,40 @@ public class ServiceModel: Equatable {
     // When the peripheral is disconnected it will be set to False.
     public internal(set) var serviceAvailable = false {
         didSet {
-            if oldValue != serviceAvailable {
-                dispatch_async(dispatch_get_main_queue()) {
-                    self.serviceModelDidChangeAvailableState(self.serviceAvailable)
-                }
+            if oldValue == serviceAvailable {
+                return
+            }
+            DispatchQueue.main.async {
+                self.serviceModelDidChangeAvailableState(self.serviceAvailable)
             }
         }
     }
     // When all mapped characteristics are available it will be set to True.
     // When the peripheral is disconnected it will be ste to False.
-    public private(set) var serviceReady = false {
+    public fileprivate(set) var serviceReady = false {
         didSet {
-            if oldValue != serviceReady {
-                dispatch_async(dispatch_get_main_queue()) {
-                    self.serviceModelDidChangeReadyState(self.serviceReady)
-                }
+            if oldValue == serviceReady {
+                return
+            }
+            DispatchQueue.main.async {
+                self.serviceModelDidChangeReadyState(self.serviceReady)
             }
         }
     }
     
-    // MARK: Internal properties
+    // MARK: properties
     
-    internal weak var serviceModelManager: ServiceModelManager?
-    internal var valueTypeMapping = [String: Any.Type]()
-    internal var transformerMapping = [String: DataTransformer]()
-    internal var characteristicUUIDs: [String] {
-        get {
-            return Array(valueTypeMapping.keys)
-        }
+    weak var serviceModelManager: ServiceModelManager?
+    var valueTypeMapping = [String: Any.Type]()
+    var transformerMapping = [String: DataTransformer]()
+    var characteristicUUIDs: [String] {
+        return Array(valueTypeMapping.keys)
     }
     
     // MARK: Private properties
     
-    private let map = Map()
-    private var readCompletionHandlers: [String: [readCompletionHandler]] = [:]
+    fileprivate let map = Map()
+    fileprivate var readCompletionHandlers: [String: [ReadCompletionHandler]] = [:]
     
     // MARK: Initalizers
     
@@ -73,7 +73,7 @@ public class ServiceModel: Equatable {
      Function that needs to be subclassed.
      Return the UUID of the service it represents.
      */
-    public func serviceUUID() -> String {
+    open var serviceUUID:String {
         fatalError("Must override this function in your subclass of `BTServiceModel`")
     }
     
@@ -81,7 +81,7 @@ public class ServiceModel: Equatable {
      Function that needs to be subclassed.
      In this function you can create the mapping between UUID and the actual instance variable.
      */
-    public func mapping(map: Map) {
+    open func mapping(_ map: Map) {
         fatalError("Must override this function in your subclass of `BTServiceModel`")
     }
     
@@ -89,49 +89,53 @@ public class ServiceModel: Equatable {
     
     /**
      Read the value of the characteristic.
-        
-     - parameter UUID: The UUID of the characteristic to read.
+     
+     - parameter uuid: The UUID of the characteristic to read.
      - parameter completion: Completion block called after the read is done.
      */
-    public func readValue(withUUID UUID: String, completion: readCompletionHandler? = nil) {
-        serviceModelManager?.readValue(UUID, serviceUUID: serviceUUID())
+    public func readValue(withUUID uuid: String, completion: ReadCompletionHandler? = nil) {
+        serviceModelManager?.readValue(uuid, serviceUUID: serviceUUID)
         
         if let completion = completion {
-           addReadCompletionHandler(completion, forUUID: UUID)
+            add(readCompletionHandler: completion, forUUID: uuid)
         }
     }
     
     /**
      Write a value to the characteristic.
      Before calling this, first set the value on your ServiceModel subclass.
-        
-     - parameter UUID: The UUID of the characteristic to send.
+     
+     - parameter uuid: The UUID of the characteristic to send.
      - parameter response: Boolean to send a write with(out) response.
      */
-    public func writeValue(withUUID UUID: String, response: Bool = false) {
-        let value = getValueInServiceModel(withUUID: UUID)
+    public func writeValue(withUUID uuid: String, response: Bool = false) {
+        let value = getValueInServiceModel(withUUID: uuid)
         
-        if let dataTransformer = transformer(forUUID: UUID) {
-            let data = dataTransformer.transform(valueToData: value)
-            serviceModelManager?.writeValue(data, toCharacteristicUUID: UUID, serviceUUID: serviceUUID(), response: response)
+        guard let dataTransformer = transformer(forUUID: uuid) else {
+            return
         }
+        
+        let data = dataTransformer.transform(valueToData: value)
+        serviceModelManager?.writeValue(data, toCharacteristicUUID: uuid, serviceUUID: serviceUUID, response: response)
     }
     
     /**
      Helper method to write to multiple characteristics.
-         
+     
      - parameter UUIDs: An array of Strings of the UUIDs to write.
      - paramter response: Boolean to send a write with(out) response.
      */
-    public func writeValues(withUUIDs UUIDs: [String], response: Bool = false) {
-        let _ = UUIDs.map {writeValue(withUUID: $0, response: response)}
+    public func writeValues(withUUIDs uuids: [String], response: Bool = false) {
+        uuids.forEach {
+            writeValue(withUUID: $0, response: response)
+        }
     }
     
     /**
      Called after a characteristic became available.
      It can be used to register a notify on the characteristic.
      */
-    public func registerNotifyForCharacteristic(withUUID UUID: String) -> Bool {
+    open func registerNotifyForCharacteristic(withUUID uuid: String) -> Bool {
         return false
     }
     
@@ -139,7 +143,7 @@ public class ServiceModel: Equatable {
      Called when a characteristic became available.
      Afther this call it's possible to read and write to this characteristic.
      */
-    public func characteristicBecameAvailable(withUUID UUID: String) {
+    open func characteristicBecameAvailable(withUUID uuid: String) {
         
     }
     
@@ -147,21 +151,21 @@ public class ServiceModel: Equatable {
      Called when a value of a characteristic value is read or updated.
      Can be because of a read call or due to a notify.
      */
-    public func characteristicDidUpdateValue(withUUID UUID: String) {
+    open func characteristicDidUpdateValue(withUUID uuid: String) {
         
     }
     
     /**
      Called when the serviceAvailable state changed.
      */
-    public func serviceModelDidChangeAvailableState(available: Bool) {
+    open func serviceModelDidChangeAvailableState(_ available: Bool) {
         
     }
     
     /**
      Called when the serviceReady state changed.
      */
-    public func serviceModelDidChangeReadyState(ready: Bool) {
+    open func serviceModelDidChangeReadyState(_ ready: Bool) {
         
     }
 }
@@ -169,19 +173,19 @@ public class ServiceModel: Equatable {
 
 extension ServiceModel {
     
-    public typealias readCompletionHandler = ((value: MapValue) -> Void)
+    public typealias ReadCompletionHandler = ((_ value: MapValue) -> Void)
     
     /**
      Called by the `Map` object.
      Adds the UUID and valueType of the instance variable it represents to an dictionary.
      Also adds custom DataTransfromers to an array if they are provided.
      */
-    internal func register(withUUID UUID: String, valueType: Any.Type, transformer: DataTransformer?) {
-        if valueTypeMapping[UUID] == nil {
-            valueTypeMapping[UUID] = valueType
+    func register(withUUID uuid: String, valueType: Any.Type, transformer: DataTransformer?) {
+        if valueTypeMapping[uuid] == nil {
+            valueTypeMapping[uuid] = valueType
         }
-        if transformerMapping[UUID] == nil, let transformer = transformer {
-            transformerMapping[UUID] = transformer
+        if transformerMapping[uuid] == nil, let transformer = transformer {
+            transformerMapping[uuid] = transformer
         }
     }
     
@@ -190,35 +194,37 @@ extension ServiceModel {
      Will get the correct DataTransformer and set the value to the instance variable.
      After that is will call the completion block (if available) and other helper functions.
      */
-    internal func didRead(data: NSData?, withUUID UUID: String) {
-        if let dataTransformer = transformer(forUUID: UUID) {
-            let value = dataTransformer.transform(dataToValue: data)
-            setValueInServiceModel(value, withUUID: UUID)
-            
-            // Call convenience function.
-            characteristicDidUpdateValue(withUUID: UUID)
-            
-            // Call all existing completion blocks for this read.
-            callReadCompletionHandlers(withValue: value, forUUID: UUID)
+    func didRead(_ data: Data?, withUUID uuid: String) {
+        guard let dataTransformer = transformer(forUUID: uuid) else {
+            return
         }
+        let value = dataTransformer.transform(dataToValue: data)
+        setValueInServiceModel(value, withUUID: uuid)
+        
+        // Call convenience function.
+        characteristicDidUpdateValue(withUUID: uuid)
+        
+        // Call all existing completion blocks for this read.
+        callReadCompletionHandlers(withValue: value, forUUID: uuid)
+        
     }
     
     /**
      Called by the `ServiceModelManager` once a characteristic became available.
      */
-    internal func characteristicAvailable(withUUID UUID: String) {
-        if !serviceReady && allCharacteristicsAvailable() {
+    func characteristicAvailable(withUUID uuid: String) {
+        if !serviceReady && allCharacteristicsAvailable {
             serviceReady = true
         }
         
-        characteristicBecameAvailable(withUUID: UUID)
+        characteristicBecameAvailable(withUUID: uuid)
     }
     
     /**
      Reset the `ServiceModel` and make it unavailable.
      Called when the connection is lost with the peripheral.
      */
-    internal func resetService() {
+    func resetService() {
         serviceReady = false
         serviceAvailable = false
     }
@@ -230,26 +236,30 @@ extension ServiceModel {
      A custom DataTransformer if provided.
      Or a default DataTransformer if the type is supported.
      */
-    private func transformer(forUUID UUID: String) -> DataTransformer? {
+    fileprivate func transformer(forUUID uuid: String) -> DataTransformer? {
         // Return custom transformer if available.
-        if let transformer = transformerMapping[UUID] {
+        if let transformer = transformerMapping[uuid] {
             return transformer
         }
         
         // Get the a default transformer based on the type of the property.
-        guard let valueType = valueType(forUUID: UUID) else {
+        guard let valueType = valueType(forUUID: uuid) else {
             return nil
         }
         if valueType == String?.self || valueType == String.self {
             return StringDataTransformer()
+            
         } else if valueType == UInt8?.self || valueType == UInt8.self {
-            return UInt8DataTransformer()
+            return UIntDataTransformer<UInt8>()
+            
         } else if valueType == UInt16?.self || valueType == UInt16.self {
-            return UInt16DataTransformer()
+            return UIntDataTransformer<UInt16>()
+            
         } else if valueType == UInt32?.self || valueType == UInt32.self {
-            return UInt32DataTransformer()
-        } else if valueType == NSData?.self || valueType == NSData.self {
-            return NSDataDataTransformer()
+            return UIntDataTransformer<UInt32>()
+            
+        } else if valueType == Data?.self || valueType == Data.self {
+            return DataDataTransformer()
         }
         return nil
     }
@@ -257,8 +267,8 @@ extension ServiceModel {
     /**
      Returns the valueType of a characteristic.
      */
-    private func valueType(forUUID UUID: String) -> Any.Type? {
-        return valueTypeMapping[UUID]
+    fileprivate func valueType(forUUID uuid: String) -> Any.Type? {
+        return valueTypeMapping[uuid]
     }
     
     /**
@@ -267,7 +277,7 @@ extension ServiceModel {
      The mapping function will loop through all instance variables.
      Once it matches the same UUID it will copy the value to the actual instance variable.
      */
-    private func setValueInServiceModel(value: MapValue?, withUUID UUID: String) {
+    fileprivate func setValueInServiceModel(_ value: MapValue?, withUUID UUID: String) {
         // Store UUID and value in Map.
         map.setMapUUID = UUID
         map.setMapValue = value
@@ -287,9 +297,9 @@ extension ServiceModel {
      Once it matches the same UUID it will get the value and place it in the `Map` object.
      The value of the `Map` object will be returned.
      */
-    private func getValueInServiceModel(withUUID UUID: String) -> MapValue? {
+    fileprivate func getValueInServiceModel(withUUID uuid: String) -> MapValue? {
         // Register the correct UUID to get the value from.
-        map.getMapUUID = UUID
+        map.getMapUUID = uuid
         
         // Call mapping function.
         mapping(map)
@@ -303,12 +313,12 @@ extension ServiceModel {
      Add a completion handler to the Dictionary.
      Multiple completion blocks can be registered for the same UUID.
      */
-    private func addReadCompletionHandler(completionHandler: readCompletionHandler, forUUID UUID: String) {
-        if var completionHandlers = readCompletionHandlers[UUID] {
+    fileprivate func add(readCompletionHandler completionHandler: @escaping ReadCompletionHandler, forUUID uuid: String) {
+        if var completionHandlers = readCompletionHandlers[uuid] {
             completionHandlers.append(completionHandler)
-            readCompletionHandlers[UUID] = completionHandlers
+            readCompletionHandlers[uuid] = completionHandlers
         } else {
-            readCompletionHandlers[UUID] = [completionHandler]
+            readCompletionHandlers[uuid] = [completionHandler]
         }
     }
     
@@ -316,23 +326,23 @@ extension ServiceModel {
      Call all registered completion blocks for that UUID.
      Multiple completion blocks can be called for the same UUID.
      */
-    private func callReadCompletionHandlers(withValue value: MapValue, forUUID UUID: String) {
-        guard let completionHandlers = readCompletionHandlers[UUID] else {
+    fileprivate func callReadCompletionHandlers(withValue value: MapValue, forUUID uuid: String) {
+        guard let completionHandlers = readCompletionHandlers[uuid] else {
             return
         }
         
         for completionHandler in completionHandlers {
-            completionHandler(value: value)
+            completionHandler(value)
         }
-        readCompletionHandlers[UUID] = nil
+        readCompletionHandlers[uuid] = nil
     }
     
     /**
      Check if all characteristics are available.
      */
-    private func allCharacteristicsAvailable() -> Bool {
+    fileprivate var allCharacteristicsAvailable:Bool {
         for characteristicUUID in characteristicUUIDs {
-            if serviceModelManager?.characteristicAvailable(characteristicUUID, serviceUUID: serviceUUID()) == false {
+            if serviceModelManager?.characteristicAvailable(characteristicUUID, serviceUUID: serviceUUID) == false {
                 return false
             }
         }

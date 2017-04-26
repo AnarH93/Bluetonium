@@ -4,16 +4,18 @@ Bluetonium is a Swift Library that makes it easy to communicate with Bluetooth d
 
 [![Build Status](https://travis-ci.org/e-sites/Bluetonium.svg)](https://travis-ci.org/e-sites/Bluetonium)
 [![CocoaPods Compatible](https://img.shields.io/cocoapods/v/Bluetonium.svg)](https://img.shields.io/cocoapods/v/Bluetonium.svg)
-[![Carthage Compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
+[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![Platform](https://img.shields.io/cocoapods/p/Bluetonium.svg?style=flat)](http://cocoadocs.org/docsets/Bluetonium)
+[![Quality](https://apps.e-sites.nl/cocoapodsquality/Bluetonium/badge.svg?003)](https://cocoapods.org/pods/Bluetonium/quality)
 
 ## Features
 
 - [x] 🎲 Services and characteristics mapping
 - [x] 👓 Default data transformers
-- [x] 🔧 Reading & Writing to peripherals
+- [x] 🔧 Reading & writing to peripherals
 - [x] 🌔 Background mode
 - [x] 📻 Scanning and connecting to peripherals
+- [x] 🦅 Swift 3
 
 ## Requirements
 
@@ -53,14 +55,14 @@ manager.delegate = self
 manager.startScanForDevices()
 ```
 
-If a device is found you will get notified by the `func manager(manager: Manager, didFindDevice device: Device)` delegate call. You can also get all found devices in the `foundDevices` array of your manager.
+If a device is found you will get notified by the `func manager(_ manager: Manager, didFindDevice device: Device)` delegate call. You can also get all found devices in the `foundDevices` array of your manager.
 
 ### Connect to a device
 
 Connecting to a device is simple.
 
 ```swift
-manager.connectWithDevice(device)
+manager.connect(with: device)
 ```
 
 The `device` is a device form the `foundDevices` array.
@@ -76,7 +78,7 @@ class BatteryServiceModel: ServiceModel {
 
 	var batteryLevel: UInt8 = 0
 	
-	override func serviceUUID() -> String {
+	override var serviceUUID:String {
 		return "180F"
 	}
 	
@@ -92,8 +94,8 @@ Register a `ServiceModel` subclass. Make sure you do this before the device is a
 ```swift
 let batteryServiceModel = BatteryServiceModel()
 
-func manager(manager: Manager, willConnectToDevice device: Device) {
-	device.registerServiceModel(batteryServiceModel)
+func manager(_ manager: Manager, willConnectToDevice device: Device) {
+	device.register(serviceModel: batteryServiceModel)
 }
 ```
 
@@ -132,14 +134,14 @@ The custom DataTransformer needs to conform to the `DataTransformer` protocol wh
 ```swift
 class HeartRateDataTransformer: DataTransformer {
     
-    func transform(dataToValue data: NSData?) -> MapValue {
+    func transform(dataToValue data: Data?) -> MapValue {
     	// Used when reading from the characteristic.
-    	// Transform NSData to your property MapValue.
+    	// Transform Data to your property MapValue.
     }
     
-    func transform(valueToData value: MapValue?) -> NSData {
+    func transform(valueToData value: MapValue?) -> Data {
     	// Used when writing to the characteristic.
-    	// Transform your property MapValue to NSData.
+    	// Transform your property MapValue to Data.
     }
     
 }
