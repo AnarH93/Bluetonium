@@ -10,16 +10,17 @@ import Foundation
 
 public protocol ManagerDelegate: class {
     
+    func manager(_ manager: Manager, shouldConnectTo peripheral: Device) -> Bool
     /**
      Called when the `Manager` did find a peripheral and did add it to the foundDevices array.
      */
     func manager(_ manager: Manager, didFindDevice device: Device)
-
+    
     /**
      Called when the `Manager` did find a peripheral and did add it to the foundDevices array.
      */
     func manager(_ manager: Manager, didFindDevice device: Device, rssi RSSI: NSNumber)
-
+    
     /**
      Called when the `Manager` is trying to connect to device
      */
@@ -35,7 +36,7 @@ public protocol ManagerDelegate: class {
      Retry will indicate if the Manager will retry to connect when it becomes available.
      */
     func manager(_ manager: Manager, disconnectedFromDevice device: Device, willRetry retry: Bool)
-
+    
     /**
      Called when the `Manager` did change state.
      */

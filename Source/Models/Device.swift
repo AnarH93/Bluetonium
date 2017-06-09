@@ -13,7 +13,18 @@ import CoreBluetooth
  A `Device` will represent a CBPeripheral.
  When registering ServiceModels on this device it will automaticly map the characteristics to the correct value.
 */
-public class Device: Equatable {
+public class Device: NSObject {
+    
+    var advDataLocalName: String?
+    open var name: String {
+        return advDataLocalName ?? peripheral.name ?? "<nil>"
+    }
+    
+    override public var description: String {
+        let id = peripheral.identifier.uuidString
+        let state = peripheral.state
+        return "<Device: \(name), id = \(id), state = \(state)>"
+    }
     
     // An array of all registered `ServiceModel` subclasses
     open var registedServiceModels: [ServiceModel] {
@@ -30,10 +41,13 @@ public class Device: Equatable {
     
     /**
      Initalize the `Device` with a Peripheral.
-    
+     
      - parameter peripheral: The peripheral it will represent
+     - parameter name: The name it will represent
      */
-    public init(peripheral: CBPeripheral) {
+    
+    public init(peripheral: CBPeripheral, with name: String? = nil) {
+        self.advDataLocalName = name
         self.peripheral = peripheral
         self.serviceModelManager = ServiceModelManager(peripheral: peripheral)
     }
@@ -65,6 +79,6 @@ public class Device: Equatable {
      Equatable support.
      */
     public static func == (lhs: Device, rhs: Device) -> Bool {
-        return lhs.peripheral.identifier == rhs.peripheral.identifier
+        return lhs.peripheral.identifier == rhs.peripheral.identifier && lhs.name == rhs.name
     }
 }
