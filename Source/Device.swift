@@ -20,7 +20,19 @@ public func ==(lhs: Device, rhs: Device) -> Bool {
  A `Device` will represent a CBPeripheral.
  When registering ServiceModels on this device it will automaticly map the characteristics to the correct value.
 */
-public class Device: Equatable {
+public class Device: NSObject {
+    
+    var advDataLocalName: String?
+    public var name: String {
+        return advDataLocalName ?? peripheral.name ?? "<nil>"
+    }
+    
+    override public var description: String {
+        let id = peripheral.identifier.UUIDString
+        let state = peripheral.state
+        return "<Device: \(name), id = \(id), state = \(state)>"
+    }
+    
     
     // An array of all registered `ServiceModel` subclasses
     public var registedServiceModels: [ServiceModel] {
@@ -40,7 +52,8 @@ public class Device: Equatable {
     
      - parameter peripheral: The peripheral it will represent
      */
-    public init(peripheral: CBPeripheral) {
+    public init(peripheral: CBPeripheral, with name: String? = nil) {
+        self.advDataLocalName = name
         self.peripheral = peripheral
         self.serviceModelManager = ServiceModelManager(withPeripheral: peripheral)
     }
