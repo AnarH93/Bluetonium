@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A192EB101EEED3D9006EF73B /* Bluetonium.podspec in Resources */ = {isa = PBXBuildFile; fileRef = A192EB0F1EEED3D9006EF73B /* Bluetonium.podspec */; };
 		DAABFE8C1C5BAEC200239CAA /* DataTransformers.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAABFE841C5BAEC200239CAA /* DataTransformers.swift */; };
 		DAABFE8D1C5BAEC200239CAA /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAABFE851C5BAEC200239CAA /* Device.swift */; };
 		DAABFE8F1C5BAEC200239CAA /* Manager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAABFE871C5BAEC200239CAA /* Manager.swift */; };
@@ -17,6 +18,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A192EB0F1EEED3D9006EF73B /* Bluetonium.podspec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Bluetonium.podspec; sourceTree = SOURCE_ROOT; };
 		DA907BAF1C5766FC00D9487F /* Bluetonium.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Bluetonium.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DAABFE831C5BAEC200239CAA /* Bluetonium.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Bluetonium.h; path = Source/Bluetonium.h; sourceTree = SOURCE_ROOT; };
 		DAABFE841C5BAEC200239CAA /* DataTransformers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DataTransformers.swift; path = Source/DataTransformers.swift; sourceTree = SOURCE_ROOT; };
@@ -80,6 +82,7 @@
 		DAABFE941C5BAED200239CAA /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				A192EB0F1EEED3D9006EF73B /* Bluetonium.podspec */,
 				DAABFE831C5BAEC200239CAA /* Bluetonium.h */,
 				DAABFE861C5BAEC200239CAA /* Info.plist */,
 			);
@@ -154,6 +157,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A192EB101EEED3D9006EF73B /* Bluetonium.podspec in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
