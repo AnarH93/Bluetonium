@@ -149,11 +149,11 @@ public class Manager: NSObject, CBCentralManagerDelegate {
         print("willRestoreState: \(dict[CBCentralManagerRestoredStatePeripheralsKey])")
         let peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral]
         peripherals?.forEach({ (peripheral) in
-            let device = Device(peripheral: peripheral)
-            if let delegate = self.delegate where
-                delegate.manager(self, shouldConnectTo: device) {
-                central.connectPeripheral(peripheral, options: nil)
-            }
+            //            let device = Device(peripheral: peripheral)
+            //            if let delegate = self.delegate where
+            //                delegate.manager(self, shouldConnectTo: device) {
+            central.connectPeripheral(peripheral, options: nil)
+            //            }
         })
     }
     
@@ -162,10 +162,10 @@ public class Manager: NSObject, CBCentralManagerDelegate {
         switch (central.state) {
         case .PoweredOn:
             connectedDevices.forEach({ (device) in
-                if let delegate = self.delegate where
-                    delegate.manager(self, shouldConnectTo: device) {
-                    central.connectPeripheral(device.peripheral, options: [ CBConnectPeripheralOptionNotifyOnDisconnectionKey: NSNumber(bool: true) ])
-                }
+                //                if let delegate = self.delegate where
+                //                    delegate.manager(self, shouldConnectTo: device) {
+                central.connectPeripheral(device.peripheral, options: [ CBConnectPeripheralOptionNotifyOnDisconnectionKey: NSNumber(bool: true) ])
+                //                }
             })
             
             storedConnectedUUID?.forEach({ (uuid) in
@@ -180,10 +180,10 @@ public class Manager: NSObject, CBCentralManagerDelegate {
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(0.2 * Double(NSEC_PER_SEC))), dispatchQueue) {
                         let device = Device(peripheral: peripheral)
                         
-                        if let _delegate = self.delegate where _delegate.manager(self, shouldConnectTo: device) {
-                            device.registerServiceManager()
-                            self.connect(with: device)
-                        }
+                        //                        if let _delegate = self.delegate where _delegate.manager(self, shouldConnectTo: device) {
+                        device.registerServiceManager()
+                        self.connect(with: device)
+                        //                        }
                     }
                 })
             })
@@ -233,10 +233,10 @@ public class Manager: NSObject, CBCentralManagerDelegate {
     
     @objc public func centralManager(central: CBCentralManager, didConnectPeripheral peripheral: CBPeripheral) {
         let device = Device(peripheral: peripheral)
-        guard let _delegate = delegate where _delegate.manager(self, shouldConnectTo: device) else {
-            central.cancelPeripheralConnection(peripheral)
-            return
-        }
+        //        guard let _delegate = delegate where _delegate.manager(self, shouldConnectTo: device) else {
+        //            central.cancelPeripheralConnection(peripheral)
+        //            return
+        //        }
         
         connectedDevices.append(device)
         
@@ -252,11 +252,11 @@ public class Manager: NSObject, CBCentralManagerDelegate {
     @objc public func centralManager(central: CBCentralManager, didFailToConnectPeripheral peripheral: CBPeripheral, error: NSError?) {
         print("didFailToConnect \(peripheral)")
         
-        let device = Device(peripheral: peripheral)
-        if let delegate = self.delegate where
-            delegate.manager(self, shouldConnectTo: device) {
-            connect(to: peripheral)
-        }
+        //        let device = Device(peripheral: peripheral)
+        //        if let delegate = self.delegate where
+        //            delegate.manager(self, shouldConnectTo: device) {
+        connect(to: peripheral)
+        //        }
     }
     
     @objc public func centralManager(central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: NSError?) {
@@ -288,10 +288,10 @@ public class Manager: NSObject, CBCentralManagerDelegate {
         // Send reconnect command after peripheral disconnected.
         // It will connect again when it became available.
         
-        if let delegate = self.delegate where
-            delegate.manager(self, shouldConnectTo: connectedDevice) {
-            connect(to: peripheral)
-        }
+        //        if let delegate = self.delegate where
+        //            delegate.manager(self, shouldConnectTo: connectedDevice) {
+        connect(to: peripheral)
+        //      }
         
         //remove from connected
         if let index = _index {
