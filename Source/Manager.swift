@@ -28,7 +28,8 @@ public class Manager: NSObject, CBCentralManagerDelegate {
     
     private(set) public var scanning = false
     private(set) public var connectedDevices: [Device] = []
-    private(set) public var foundDevices: [CBPeripheral] = []
+    private(set) public var foundPeripherals: [CBPeripheral] = []
+    private(set) public var foundDevices: [Device] = []
     public weak var delegate: ManagerDelegate?
     
     private var centralManager: CBCentralManager?
@@ -78,7 +79,8 @@ public class Manager: NSObject, CBCentralManagerDelegate {
      */
     public func connect(with device: Device) {
         // Only allow connecting when it's not yet connected to another device.
-        foundDevices.append(device.peripheral)
+        foundDevices.append(device)
+        foundPeripherals.append(device.peripheral)
         
         // Store connected UUID, to enable later connection to the same peripheral.
         store(connectedUUID: device.peripheral.identifier.UUIDString)
@@ -232,11 +234,17 @@ public class Manager: NSObject, CBCentralManagerDelegate {
     }
     
     @objc public func centralManager(central: CBCentralManager, didConnectPeripheral peripheral: CBPeripheral) {
-        let device = Device(peripheral: peripheral)
-        //        guard let _delegate = delegate where _delegate.manager(self, shouldConnectTo: device) else {
-        //            central.cancelPeripheralConnection(peripheral)
-        //            return
-        //        }
+        
+        //быдлокод ввиду криво спроектированного класа
+        let index = foundDevices.indexOf({ $0.peripheral == peripheral })
+        var device = Device(peripheral: peripheral)
+        
+        if let _index = index {
+            device = foundDevices[_index]
+        } else {
+            // Only after adding it to the list to prevent issues reregistering the delegate.
+            device.registerServiceManager()
+        }
         
         connectedDevices.append(device)
         
