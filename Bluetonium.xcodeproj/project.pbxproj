@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A18DADE61EEFEC91002B48C5 /* Bluetonium.podspec in Resources */ = {isa = PBXBuildFile; fileRef = A18DADE51EEFEC91002B48C5 /* Bluetonium.podspec */; };
 		C394E08A1E802C6100627974 /* Manager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C394E0851E802C6100627974 /* Manager.swift */; };
 		C394E08B1E802C6100627974 /* ServiceModelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C394E0861E802C6100627974 /* ServiceModelManager.swift */; };
 		C394E08C1E802C6100627974 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = C394E0881E802C6100627974 /* Device.swift */; };
@@ -18,6 +19,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A18DADE51EEFEC91002B48C5 /* Bluetonium.podspec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Bluetonium.podspec; sourceTree = SOURCE_ROOT; };
 		C394E0851E802C6100627974 /* Manager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Manager.swift; sourceTree = "<group>"; };
 		C394E0861E802C6100627974 /* ServiceModelManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServiceModelManager.swift; sourceTree = "<group>"; };
 		C394E0881E802C6100627974 /* Device.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
@@ -101,6 +103,7 @@
 		DAABFE941C5BAED200239CAA /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				A18DADE51EEFEC91002B48C5 /* Bluetonium.podspec */,
 				DAABFE831C5BAEC200239CAA /* Bluetonium.h */,
 				DAABFE861C5BAEC200239CAA /* Info.plist */,
 			);
@@ -176,6 +179,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A18DADE61EEFEC91002B48C5 /* Bluetonium.podspec in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
