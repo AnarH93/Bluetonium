@@ -238,7 +238,7 @@ extension ServiceModel {
         
         // Get the a default transformer based on the type of the property.
         guard let valueType = valueType(forUUID: UUID) else {
-            return nil
+            return NSDataDataTransformer()
         }
         if valueType == String?.self || valueType == String.self {
             return StringDataTransformer()
@@ -251,7 +251,7 @@ extension ServiceModel {
         } else if valueType == NSData?.self || valueType == NSData.self {
             return NSDataDataTransformer()
         }
-        return nil
+        return NSDataDataTransformer()
     }
     
     /**
