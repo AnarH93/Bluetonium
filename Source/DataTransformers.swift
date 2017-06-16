@@ -85,6 +85,6 @@ class UIntDataTransformer<T:MapValue> : DataTransformer where T:UnsignedInteger 
         guard var value = value as? T else {
             return Data()
         }
-        return Data(bytes: &value, count: MemoryLayout<UInt8>.size)
+        return Data(bytes: &value, count: MemoryLayout<T>.size)
     }
 }

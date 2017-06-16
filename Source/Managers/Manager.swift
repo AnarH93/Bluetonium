@@ -162,11 +162,7 @@ extension Manager: CBCentralManagerDelegate {
         
         let peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral]
         peripherals?.forEach({ (peripheral) in
-            let device = Device(peripheral: peripheral)
-            if let delegate = self.delegate,
-                delegate.manager(self, shouldConnectTo: device) {
-                central.connect(peripheral, options: nil)
-            }
+            central.connect(peripheral, options: nil)
         })
     }
     
@@ -175,10 +171,7 @@ extension Manager: CBCentralManagerDelegate {
         switch (central.state) {
         case .poweredOn:
             connectedDevices.forEach({ (device) in
-                if let delegate = self.delegate,
-                    delegate.manager(self, shouldConnectTo: device) {
-                    central.connect(device.peripheral, options: [ CBConnectPeripheralOptionNotifyOnDisconnectionKey: NSNumber(value: true) ])
-                }
+                central.connect(device.peripheral, options: [ CBConnectPeripheralOptionNotifyOnDisconnectionKey: NSNumber(value: true) ])
             })
             
             storedConnectedUUID?.forEach({ (uuid) in
@@ -191,10 +184,8 @@ extension Manager: CBCentralManagerDelegate {
                     dispatchQueue.asyncAfter(deadline: DispatchTime.now() + Double(Int64(0.2 * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC)) { [weak self] in
                         let device = Device(peripheral: peripheral)
                         
-                        if let _self = self, let _delegate = _self.delegate, _delegate.manager(_self, shouldConnectTo: device) {
-                            device.registerServiceManager()
-                            self?.connect(with: device)
-                        }
+                        device.registerServiceManager()
+                        self?.connect(with: device)
                     }
                 })
             })
@@ -226,7 +217,7 @@ extension Manager: CBCentralManagerDelegate {
         
         let device = Device(peripheral: peripheral, with: name)
         
-        guard let _delegate = delegate, _delegate.manager(self, shouldConnectTo: device) else {
+        guard let _delegate = delegate, _delegate.manager(self, shouldConnectTo: device, advertisementData: advertisementData) else {
             //это вообще бесплоезно, знаю, но чисто для теста одного бага на который мы потратили уже 3 месяца
             return
         }
@@ -255,11 +246,6 @@ extension Manager: CBCentralManagerDelegate {
             device.registerServiceManager()
         }
         
-        guard let _delegate = delegate, _delegate.manager(self, shouldConnectTo: device) else {
-            central.cancelPeripheralConnection(peripheral)
-            return
-        }
-        
         connectedDevices.append(device)
         
         DispatchQueue.main.async {
@@ -274,12 +260,7 @@ extension Manager: CBCentralManagerDelegate {
     
     public func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         print("didFailToConnect \(peripheral)")
-        
-        let device = Device(peripheral: peripheral)
-        if let delegate = self.delegate,
-            delegate.manager(self, shouldConnectTo: device) {
-            connect(to: peripheral)
-        }
+        connect(to: peripheral)
     }
     
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
@@ -310,10 +291,7 @@ extension Manager: CBCentralManagerDelegate {
         // Send reconnect command after peripheral disconnected.
         // It will connect again when it became available.
         
-        if let delegate = self.delegate,
-            delegate.manager(self, shouldConnectTo: connectedDevice) {
-            connect(to: peripheral)
-        }
+        connect(to: peripheral)
         
         //remove from connected
         if let index = _index {

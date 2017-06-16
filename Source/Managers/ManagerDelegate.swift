@@ -10,7 +10,7 @@ import Foundation
 
 public protocol ManagerDelegate: class {
     
-    func manager(_ manager: Manager, shouldConnectTo peripheral: Device) -> Bool
+    func manager(_ manager: Manager, shouldConnectTo peripheral: Device, advertisementData: [String : Any]) -> Bool
     /**
      Called when the `Manager` did find a peripheral and did add it to the foundDevices array.
      */
