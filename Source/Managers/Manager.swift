@@ -191,12 +191,13 @@ extension Manager: CBCentralManagerDelegate {
             })
             
         case .poweredOff:
-            DispatchQueue.main.async {
-                self.connectedDevices.forEach({ (device) in
-                    device.serviceModelManager.resetServices()
-                    self.delegate?.manager(self, disconnectedFromDevice: device, willRetry: false)
-                })
-            }
+//            DispatchQueue.main.async {
+//                self.connectedDevices.forEach({ (device) in
+//                    device.serviceModelManager.resetServices()
+//                    self.delegate?.manager(self, disconnectedFromDevice: device, willRetry: false)
+//                })
+//            }
+            break
         default:
             break
         }
@@ -264,12 +265,8 @@ extension Manager: CBCentralManagerDelegate {
     }
     
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        guard error == nil else {
-            DispatchQueue.main.async {
-                self.delegate?.manager(self, disconnectedFromDevice: Device(peripheral: peripheral), willRetry: true)
-            }
-            connect(to: peripheral)
-            return
+        if let error = error {
+            print("didDisconnectPeripheral for: \(peripheral); with \(error)")
         }
         
         let connectedPeripherals = connectedDevices.map { (device) -> CBPeripheral in
