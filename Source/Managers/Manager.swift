@@ -162,7 +162,9 @@ extension Manager: CBCentralManagerDelegate {
         
         let peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral]
         peripherals?.forEach({ (peripheral) in
-            central.connect(peripheral, options: nil)
+            let device = Device(peripheral: peripheral)
+            device.registerServiceManager()
+            self.connect(with: device)
         })
     }
     
