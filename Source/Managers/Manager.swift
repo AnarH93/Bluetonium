@@ -29,6 +29,8 @@ open class Manager: NSObject {
     fileprivate(set) open var connectedDevices: [Device] = []
     fileprivate(set) open var foundPeripherals: [CBPeripheral] = []
     fileprivate(set) open var foundDevices: [Device] = []
+    fileprivate(set) open var willRestoreState: [CBPeripheral]?
+    
     open weak var delegate: ManagerDelegate?
     
     private var central: CBCentralManager?
@@ -53,7 +55,7 @@ open class Manager: NSObject {
      
      - parameter services: The UUID of the service the device is advertising with, can be nil.
      */
-    open func scan(with CBUUIDs: [String]? = nil) {
+    open func scan(with CBUUIDs: [String]? = nil, allowDuplicates: Bool = false) {
         //        if scanning == true {
         //            return
         //        }
@@ -61,7 +63,7 @@ open class Manager: NSObject {
         
         foundDevices.removeAll()
         foundPeripherals.removeAll()
-        central?.scanForPeripherals(withServices: CBUUIDs?.cbUuids, options: nil)
+        central?.scanForPeripherals(withServices: CBUUIDs?.cbUuids, options: [CBCentralManagerScanOptionAllowDuplicatesKey: allowDuplicates])
     }
     
     /**
@@ -160,18 +162,21 @@ extension Manager: CBCentralManagerDelegate {
     public func centralManager(_ central: CBCentralManager, willRestoreState dict: [String : Any]) {
         print("willRestoreState: \(String(describing: dict[CBCentralManagerRestoredStatePeripheralsKey]))")
         
-        let peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral]
-        peripherals?.forEach({ (peripheral) in
-            let device = Device(peripheral: peripheral)
-            device.registerServiceManager()
-            self.connect(with: device)
-        })
+        willRestoreState = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral]
+        
     }
     
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         
         switch (central.state) {
         case .poweredOn:
+            
+            willRestoreState?.forEach({ (peripheral) in
+                let device = Device(peripheral: peripheral)
+                device.registerServiceManager()
+                self.connect(with: device)
+            })
+            
             connectedDevices.forEach({ (device) in
                 central.connect(device.peripheral, options: [ CBConnectPeripheralOptionNotifyOnDisconnectionKey: NSNumber(value: true) ])
             })
@@ -290,7 +295,7 @@ extension Manager: CBCentralManagerDelegate {
         // Send reconnect command after peripheral disconnected.
         // It will connect again when it became available.
         
-        connect(to: peripheral)
+        connect(with: connectedDevice)
         
         //remove from connected
         if let index = _index {
