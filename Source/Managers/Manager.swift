@@ -22,6 +22,7 @@ open class Manager: NSObject {
     }
     
     open var rssiForConnect: Int = -100
+    open var stopScanWhenConnecting: Bool = true
     
     open static let shared: Manager = Manager()
     
@@ -97,9 +98,8 @@ open class Manager: NSObject {
             self.delegate?.manager(self, willConnectToDevice: device)
         }
         
-        print("try connect to: \(device)")
-        
-        central?.connect(device.peripheral, options: [ CBConnectPeripheralOptionNotifyOnDisconnectionKey: NSNumber(value: true) ])
+        NSLog("try connect to: \(device)")
+        connect(to: device.peripheral)
     }
     
     /**
@@ -123,6 +123,9 @@ open class Manager: NSObject {
     // MARK: Private functions
     
     fileprivate func connect(to peripheral: CBPeripheral) {
+        if stopScanWhenConnecting {
+            stop()
+        }
         central?.connect(peripheral, options: [ CBConnectPeripheralOptionNotifyOnDisconnectionKey: NSNumber(value: true) ])
     }
     
@@ -160,7 +163,7 @@ open class Manager: NSObject {
 extension Manager: CBCentralManagerDelegate {
     
     public func centralManager(_ central: CBCentralManager, willRestoreState dict: [String : Any]) {
-        print("willRestoreState: \(String(describing: dict[CBCentralManagerRestoredStatePeripheralsKey]))")
+        NSLog("willRestoreState: \(String(describing: dict[CBCentralManagerRestoredStatePeripheralsKey]))")
         
         willRestoreState = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral]
         
@@ -198,12 +201,12 @@ extension Manager: CBCentralManagerDelegate {
             })
             
         case .poweredOff:
-//            DispatchQueue.main.async {
-//                self.connectedDevices.forEach({ (device) in
-//                    device.serviceModelManager.resetServices()
-//                    self.delegate?.manager(self, disconnectedFromDevice: device, willRetry: false)
-//                })
-//            }
+            //            DispatchQueue.main.async {
+            //                self.connectedDevices.forEach({ (device) in
+            //                    device.serviceModelManager.resetServices()
+            //                    self.delegate?.manager(self, disconnectedFromDevice: device, willRetry: false)
+            //                })
+            //            }
             break
         default:
             break
@@ -216,7 +219,7 @@ extension Manager: CBCentralManagerDelegate {
     }
     
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        
+
         guard RSSI.intValue > self.rssiForConnect else {
             return
         }
@@ -267,13 +270,13 @@ extension Manager: CBCentralManagerDelegate {
     }
     
     public func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        print("didFailToConnect \(peripheral)")
+        NSLog("didFailToConnect \(peripheral)")
         connect(to: peripheral)
     }
     
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         if let error = error {
-            print("didDisconnectPeripheral for: \(peripheral); with \(error)")
+            NSLog("didDisconnectPeripheral for: \(peripheral); with \(error)")
         }
         
         let connectedPeripherals = connectedDevices.map { (device) -> CBPeripheral in
