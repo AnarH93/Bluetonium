@@ -40,7 +40,7 @@ open class Manager: NSObject {
     
     // MARK: Initializers
     
-    public init(background: Bool = false) {
+    public init(background: Bool = true) {
         super.init()
         
         let options:[String: String]? = background ? [CBCentralManagerOptionRestoreIdentifierKey: ManagerConstants.restoreIdentifier] : nil
