@@ -167,6 +167,10 @@ extension Manager: CBCentralManagerDelegate {
         
         willRestoreState = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral]
         
+        DispatchQueue.main.async {
+            self.delegate?.manager(self, willRestoreState: dict)
+        }
+        
     }
     
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -219,7 +223,11 @@ extension Manager: CBCentralManagerDelegate {
     }
     
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-
+        
+        DispatchQueue.main.async {
+            self.delegate?.manager(self, didDiscover: peripheral.name ?? "nil", advertisementData: advertisementData, rssi: RSSI)
+        }
+        
         guard RSSI.intValue > self.rssiForConnect else {
             return
         }
@@ -246,6 +254,10 @@ extension Manager: CBCentralManagerDelegate {
     
     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         
+        DispatchQueue.main.async {
+            self.delegate?.manager(self, didConnect: peripheral.name ?? "nil")
+        }
+        
         //быдлокод ввиду криво спроектированного класа
         let index = foundDevices.index(where: { $0.peripheral == peripheral })
         var device = Device(peripheral: peripheral)
@@ -270,13 +282,17 @@ extension Manager: CBCentralManagerDelegate {
     }
     
     public func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        NSLog("didFailToConnect \(peripheral)")
+        
+        DispatchQueue.main.async {
+            self.delegate?.manager(self, didFailToConnect: peripheral.name ?? "nil", error: error)
+        }
+        
         connect(to: peripheral)
     }
     
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        if let error = error {
-            NSLog("didDisconnectPeripheral for: \(peripheral); with \(error)")
+        DispatchQueue.main.async {
+            self.delegate?.manager(self, didDisconnectPeripheral: peripheral.name ?? "nil", error: error)
         }
         
         let connectedPeripherals = connectedDevices.map { (device) -> CBPeripheral in

@@ -42,4 +42,11 @@ public protocol ManagerDelegate: class {
      */
     func managerDidUpdateState(state: ManagerState)
     
+    
+    //debug methods
+    func manager(_ manager: Manager, willRestoreState dict: [String : Any])
+    func manager(_ manager: Manager, didDiscover peripheralName: String, advertisementData: [String : Any], rssi RSSI: NSNumber)
+    func manager(_ manager: Manager, didConnect peripheralName: String)
+    func manager(_ manager: Manager, didFailToConnect peripheralName: String, error: Error?)
+    func manager(_ manager: Manager, didDisconnectPeripheral peripheralName: String, error: Error?)
 }
