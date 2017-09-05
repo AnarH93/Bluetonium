@@ -38,6 +38,7 @@ open class Manager: NSObject {
     private var disconnecting = false
     fileprivate lazy var dispatchQueue:DispatchQueue = DispatchQueue(label: ManagerConstants.dispatchQueueLabel, attributes: [])
     
+    fileprivate var deviceWTFREFERENCE:CBPeripheral?
     // MARK: Initializers
     
     public init(background: Bool = true) {
@@ -98,7 +99,7 @@ open class Manager: NSObject {
             self.delegate?.manager(self, willConnectToDevice: device)
         }
         
-        NSLog("try connect to: \(device)")
+        log("try connect to: \(device)")
         connect(to: device.peripheral)
     }
     
@@ -136,14 +137,17 @@ open class Manager: NSObject {
     fileprivate func store(connectedUUID uuid: String?) {
         
         //reuse or init
-        var array = storedConnectedUUID != nil ? storedConnectedUUID! : [String]()
+        var array = storedConnectedUUID ?? [String]()
+        log("storred uuid's: \(array)")
         
-        guard let _uuid = uuid, array.contains(_uuid) else {
+        guard let _uuid = uuid, !array.contains(_uuid) else {
+            log("array contains this uuid: \(String(describing: uuid))")
             return
         }
         
         //append new value
         array.append(_uuid)
+        log("append uuid: \(_uuid) to array")
         
         let defaults = UserDefaults.standard
         defaults.set(array, forKey: ManagerConstants.UUIDStoreKey)
@@ -157,13 +161,19 @@ open class Manager: NSObject {
         return UserDefaults.standard.array(forKey: ManagerConstants.UUIDStoreKey) as? [String]
     }
     
+    fileprivate func log(_ log: String) {
+        DispatchQueue.main.async {
+            self.delegate?.manager(self, didLog: log)
+        }
+    }
+    
     // MARK: CBCentralManagerDelegate
 }
 
 extension Manager: CBCentralManagerDelegate {
     
     public func centralManager(_ central: CBCentralManager, willRestoreState dict: [String : Any]) {
-        NSLog("willRestoreState: \(String(describing: dict[CBCentralManagerRestoredStatePeripheralsKey]))")
+        log("willRestoreState: \(String(describing: dict[CBCentralManagerRestoredStatePeripheralsKey]))")
         
         willRestoreState = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral]
         
@@ -172,6 +182,7 @@ extension Manager: CBCentralManagerDelegate {
         }
         
     }
+    
     
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         
@@ -188,19 +199,26 @@ extension Manager: CBCentralManagerDelegate {
                 central.connect(device.peripheral, options: [ CBConnectPeripheralOptionNotifyOnDisconnectionKey: NSNumber(value: true) ])
             })
             
+            
+            log("storred uuids \(String(describing: storedConnectedUUID))")
+            
             storedConnectedUUID?.forEach({ (uuid) in
+                log("storred uuid: \(uuid)")
                 guard let uuid = UUID(uuidString: uuid) else {
                     return
                 }
                 let peripherals = central.retrievePeripherals(withIdentifiers: [uuid])
+                log("storred periphreals \(peripherals)")
                 peripherals.forEach({ (peripheral) in
-                    
-                    dispatchQueue.asyncAfter(deadline: DispatchTime.now() + Double(Int64(0.2 * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC)) { [weak self] in
-                        let device = Device(peripheral: peripheral)
-                        
+                    log("storred periphreal \(peripheral) and try connect to it")
+                    //dispatchQueue.asyncAfter(deadline: DispatchTime.now() + Double(Int64(0.2 * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC)) { [weak self] in
+                    deviceWTFREFERENCE = peripheral
+                    if let _peripheral = deviceWTFREFERENCE {
+                        let device = Device(peripheral: _peripheral)
                         device.registerServiceManager()
-                        self?.connect(with: device)
+                        self.connect(with: device)
                     }
+                    //}
                 })
             })
             

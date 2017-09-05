@@ -49,4 +49,5 @@ public protocol ManagerDelegate: class {
     func manager(_ manager: Manager, didConnect peripheralName: String)
     func manager(_ manager: Manager, didFailToConnect peripheralName: String, error: Error?)
     func manager(_ manager: Manager, didDisconnectPeripheral peripheralName: String, error: Error?)
+    func manager(_ manager: Manager, didLog: String)
 }
