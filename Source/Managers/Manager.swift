@@ -28,6 +28,7 @@ open class Manager: NSObject {
     
     private(set) open var scanning = false
     fileprivate(set) open var connectedDevices: [Device] = []
+    fileprivate(set) open var referenceForFakeConneced: [Device] = []
     fileprivate(set) open var foundPeripherals: [CBPeripheral] = []
     fileprivate(set) open var foundDevices: [Device] = []
     fileprivate(set) open var willRestoreState: [CBPeripheral]?
@@ -186,7 +187,7 @@ extension Manager: CBCentralManagerDelegate {
     
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         
-        switch (central.state) {
+        switch central.state {
         case .poweredOn:
             
             willRestoreState?.forEach({ (peripheral) in
@@ -198,7 +199,6 @@ extension Manager: CBCentralManagerDelegate {
             connectedDevices.forEach({ (device) in
                 central.connect(device.peripheral, options: [ CBConnectPeripheralOptionNotifyOnDisconnectionKey: NSNumber(value: true) ])
             })
-            
             
             log("storred uuids \(String(describing: storedConnectedUUID))")
             
@@ -215,6 +215,7 @@ extension Manager: CBCentralManagerDelegate {
                     deviceWTFREFERENCE = peripheral
                     if let _peripheral = deviceWTFREFERENCE {
                         let device = Device(peripheral: _peripheral)
+                        self.referenceForFakeConneced.append(device)
                         device.registerServiceManager()
                         self.connect(with: device)
                     }
@@ -276,6 +277,7 @@ extension Manager: CBCentralManagerDelegate {
             self.delegate?.manager(self, didConnect: peripheral.name ?? "nil")
         }
         
+        //monkeycode here
         //быдлокод ввиду криво спроектированного класа
         let index = foundDevices.index(where: { $0.peripheral == peripheral })
         var device = Device(peripheral: peripheral)
@@ -287,7 +289,19 @@ extension Manager: CBCentralManagerDelegate {
             device.registerServiceManager()
         }
         
-        connectedDevices.append(device)
+        let contains = connectedDevices.contains {
+            $0.peripheral.identifier == device.peripheral.identifier && device.name == $0.name
+        }
+        
+        if !contains {
+            connectedDevices.append(device)
+            NSLog("append to connectedDevices: \(device)")
+        } else {
+            referenceForFakeConneced.append(device)
+            DispatchQueue.main.async {
+                self.delegate?.manager(self, didLog: "device \(device) already connected, don't add it to array")
+            }
+        }
         
         DispatchQueue.main.async {
             // Send callback to delegate.
@@ -363,3 +377,4 @@ extension Collection where Iterator.Element:MapValue, Iterator.Element == String
         return self.map { CBUUID(string: $0) }
     }
 }
+
