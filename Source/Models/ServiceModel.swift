@@ -168,6 +168,11 @@ open class ServiceModel: Equatable {
     open func serviceModelDidChangeReadyState(_ ready: Bool) {
         
     }
+    
+    open func characteristicDidWriteValue(withUUID uuid: String) {
+        
+    }
+    
 }
 
 
@@ -349,3 +354,4 @@ extension ServiceModel {
         return true
     }
 }
+

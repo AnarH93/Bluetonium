@@ -195,5 +195,13 @@ class ServiceModelManager: NSObject, CBPeripheralDelegate {
 
     @objc func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
         print("didWrite: \(characteristic), error: \(String(describing: error))")
+        
+        guard let serviceModel = serviceModel(withUUID: characteristic.service.uuid.uuidString) else {
+            return
+        }
+        
+        serviceModel.characteristicDidWriteValue(withUUID: characteristic.uuid.uuidString)
+        
+    }
     }
 }
