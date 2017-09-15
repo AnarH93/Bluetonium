@@ -203,5 +203,5 @@ class ServiceModelManager: NSObject, CBPeripheralDelegate {
         serviceModel.characteristicDidWriteValue(withUUID: characteristic.uuid.uuidString)
         
     }
-    }
 }
+
