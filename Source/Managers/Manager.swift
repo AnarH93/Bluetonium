@@ -110,7 +110,19 @@ open class Manager: NSObject {
      */
     open func disconnect(from device: Device) {
         // Reset stored UUID.
-        store(connectedUUID: nil)
+        //        store(connectedUUID: nil)
+        guard let connectedDeviceIndex = connectedDevices.index(of: device) else {
+            return
+        }
+        connectedDevices.remove(at: connectedDeviceIndex)
+        
+        guard let foundDevicesIndex = foundDevices.index(of: device) else {
+            return
+        }
+        foundDevices.remove(at: foundDevicesIndex)
+        
+        removeConnectedUUID(uuid: device.peripheral.identifier.uuidString)
+        
         
         let peripheral = device.peripheral
         
@@ -120,6 +132,21 @@ open class Manager: NSObject {
             disconnecting = true
             central?.cancelPeripheralConnection(peripheral)
         }
+        
+    }
+    
+    private func removeConnectedUUID(uuid: String) {
+        
+        var array = storedConnectedUUID
+        guard let index = array?.index(of: uuid) else {
+            return
+        }
+        array?.remove(at: index)
+        
+        let defaults = UserDefaults.standard
+        defaults.set(array, forKey: ManagerConstants.UUIDStoreKey)
+        defaults.synchronize()
+        
     }
     
     // MARK: Private functions
