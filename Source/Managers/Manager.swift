@@ -201,7 +201,7 @@ open class Manager: NSObject {
 extension Manager: CBCentralManagerDelegate {
     
     public func centralManager(_ central: CBCentralManager, willRestoreState dict: [String : Any]) {
-        log("willRestoreState: \(String(describing: dict[CBCentralManagerRestoredStatePeripheralsKey]))")
+        log("\(Date()) willRestoreState: \(String(describing: dict[CBCentralManagerRestoredStatePeripheralsKey]))")
         
         willRestoreState = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral]
         
@@ -219,12 +219,11 @@ extension Manager: CBCentralManagerDelegate {
             
             willRestoreState?.forEach({ (peripheral) in
                 let device = Device(peripheral: peripheral)
-                device.registerServiceManager()
                 self.connect(with: device)
             })
             
             connectedDevices.forEach({ (device) in
-                central.connect(device.peripheral, options: [ CBConnectPeripheralOptionNotifyOnDisconnectionKey: NSNumber(value: true) ])
+                self.connect(to: device.peripheral)
             })
             
             log("storred uuids \(String(describing: storedConnectedUUID))")
@@ -243,7 +242,6 @@ extension Manager: CBCentralManagerDelegate {
                     if let _peripheral = deviceWTFREFERENCE {
                         let device = Device(peripheral: _peripheral)
                         self.referenceForFakeConneced.append(device)
-                        device.registerServiceManager()
                         self.connect(with: device)
                     }
                     //}
@@ -311,10 +309,10 @@ extension Manager: CBCentralManagerDelegate {
         
         if let _index = index {
             device = foundDevices[_index]
-        } else {
-            // Only after adding it to the list to prevent issues reregistering the delegate.
-            device.registerServiceManager()
         }
+        
+        // Only after adding it to the list to prevent issues reregistering the delegate.
+        device.registerServiceManager()
         
         let contains = connectedDevices.contains {
             $0.peripheral.identifier == device.peripheral.identifier && device.name == $0.name
@@ -322,12 +320,11 @@ extension Manager: CBCentralManagerDelegate {
         
         if !contains {
             connectedDevices.append(device)
-            NSLog("append to connectedDevices: \(device)")
+            log("append to connectedDevices: \(device)")
         } else {
             referenceForFakeConneced.append(device)
-            DispatchQueue.main.async {
-                self.delegate?.manager(self, didLog: "device \(device) already connected, don't add it to array")
-            }
+            
+            log("device \(device) already connected, don't add it to array")
         }
         
         DispatchQueue.main.async {
@@ -336,7 +333,6 @@ extension Manager: CBCentralManagerDelegate {
             
             // Start discovering services process after connecting to peripheral.
             device.serviceModelManager.discoverRegisteredServices()
-            
         }
     }
     
@@ -362,7 +358,7 @@ extension Manager: CBCentralManagerDelegate {
         var connectedDevice = Device(peripheral: peripheral) //setup by default
         if let index = connectedPeripherals.index(of: peripheral) {
             connectedDevice = connectedDevices[index]
-            connectedDevice.serviceModelManager.resetServices()
+            //            connectedDevice.serviceModelManager.resetServices()
             _index = index
         }
         
