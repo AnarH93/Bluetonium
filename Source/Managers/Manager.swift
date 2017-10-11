@@ -23,6 +23,7 @@ open class Manager: NSObject {
     
     open var rssiForConnect: Int = -100
     open var stopScanWhenConnecting: Bool = true
+    open var shouldConnectAfterDisconnect: Bool = true
     
     open static let shared: Manager = Manager()
     
@@ -120,19 +121,14 @@ open class Manager: NSObject {
             return
         }
         foundDevices.remove(at: foundDevicesIndex)
+        foundPeripherals.remove(at: foundDevicesIndex)
         
         removeConnectedUUID(uuid: device.peripheral.identifier.uuidString)
         
-        
         let peripheral = device.peripheral
         
-        if peripheral.state != .connected {
-            //connectedDevice = nil
-        } else {
-            disconnecting = true
-            central?.cancelPeripheralConnection(peripheral)
-        }
-        
+        disconnecting = true
+        central?.cancelPeripheralConnection(peripheral)
     }
     
     private func removeConnectedUUID(uuid: String) {
@@ -155,6 +151,7 @@ open class Manager: NSObject {
         if stopScanWhenConnecting {
             stop()
         }
+        deviceWTFREFERENCE = peripheral
         central?.connect(peripheral, options: [ CBConnectPeripheralOptionNotifyOnDisconnectionKey: NSNumber(value: true) ])
     }
     
@@ -185,7 +182,7 @@ open class Manager: NSObject {
     /**
      Returns the stored UUID if there is one.
      */
-    fileprivate var storedConnectedUUID:[String]? {
+    open var storedConnectedUUID:[String]? {
         return UserDefaults.standard.array(forKey: ManagerConstants.UUIDStoreKey) as? [String]
     }
     
@@ -368,8 +365,9 @@ extension Manager: CBCentralManagerDelegate {
         
         // Send reconnect command after peripheral disconnected.
         // It will connect again when it became available.
-        
-        connect(with: connectedDevice)
+        if shouldConnectAfterDisconnect {
+            connect(with: connectedDevice)
+        }
         
         //remove from connected
         if let index = _index {
