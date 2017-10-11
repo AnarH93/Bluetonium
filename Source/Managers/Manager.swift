@@ -370,7 +370,8 @@ extension Manager: CBCentralManagerDelegate {
         }
         
         //remove from connected
-        if let index = _index {
+        if let index = _index,
+            connectedDevices.count > index {
             connectedDevices.remove(at: index)
         }
         
