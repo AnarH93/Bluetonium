@@ -109,30 +109,23 @@ open class Manager: NSObject {
      Only possible when not connected to a device.
      */
     open func disconnect(from device: Device) {
-        // Reset stored UUID.
-        //        store(connectedUUID: nil)
-        guard let connectedDeviceIndex = connectedDevices.index(of: device) else {
-            return
-        }
-        connectedDevices.remove(at: connectedDeviceIndex)
         
-        guard let foundDevicesIndex = foundDevices.index(of: device) else {
-            return
+        // Reset stored UUID.
+        if let connectedDeviceIndex = connectedDevices.index(of: device) {
+            connectedDevices.remove(at: connectedDeviceIndex)
         }
-        foundDevices.remove(at: foundDevicesIndex)
+        
+        if let foundDevicesIndex = foundDevices.index(of: device) {
+            foundDevices.remove(at: foundDevicesIndex)
+            foundPeripherals.remove(at: foundDevicesIndex)
+        }
         
         removeConnectedUUID(uuid: device.peripheral.identifier.uuidString)
         
-        
         let peripheral = device.peripheral
         
-        if peripheral.state != .connected {
-            //connectedDevice = nil
-        } else {
-            disconnecting = true
-            central?.cancelPeripheralConnection(peripheral)
-        }
-        
+        disconnecting = true
+        central?.cancelPeripheralConnection(peripheral)
     }
     
     private func removeConnectedUUID(uuid: String) {
